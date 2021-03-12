@@ -47,7 +47,7 @@ pwm_dir(Ci,Pwm) ->
 
 set(Ci, Pwm, Value) when 
       is_integer(Ci), Ci>=0,
-      is_integer(Pwm), Pwm>0,
+      is_integer(Pwm), Pwm>=0,
       is_number(Value), Value >= 0, Value =< 100 ->
     PwmDir = pwm_dir(Ci, Pwm),
     file:write(filename:join([PwmDir,"period"]), "10000000"),
@@ -56,37 +56,37 @@ set(Ci, Pwm, Value) when
 
 set_duty_cycle(Ci, Pwm, Duty) when 
       is_integer(Ci), Ci>=0,
-      is_integer(Pwm), Pwm>0,
-      is_integer(Duty), Duty>0 ->
+      is_integer(Pwm), Pwm>=0,
+      is_integer(Duty), Duty>=0 ->
     PwmDir = pwm_dir(Ci, Pwm),
     File = filename:join(PwmDir,"duty_cycle"),
     file:write(File, integer_to_list(Duty)).
 
 set_period(Ci, Pwm, Period) when 
       is_integer(Ci), Ci>=0,
-      is_integer(Pwm), Pwm>0,
-      is_integer(Period), Period>0 ->
+      is_integer(Pwm), Pwm>=0,
+      is_integer(Period), Period>=0 ->
     PwmDir = pwm_dir(Ci, Pwm),
     File = filename:join(PwmDir,"period"),
     file:write(File, integer_to_list(Period)).
 
 enable(Ci, Pwm) when 
       is_integer(Ci), Ci>=0,
-      is_integer(Pwm), Pwm>0 ->
+      is_integer(Pwm), Pwm>=0 ->
     PwmDir = pwm_dir(Ci, Pwm),
     File = filename:join(PwmDir,"enable"),
     file:write(File, "1").
 
 disable(Ci, Pwm) when 
       is_integer(Ci), Ci>=0,
-      is_integer(Pwm), Pwm>0 ->
+      is_integer(Pwm), Pwm>=0 ->
     PwmDir = pwm_dir(Ci, Pwm),
     File = filename:join(PwmDir,"enable"),
     file:write(File, "0").
 
 polarity(Ci, Pwm, Pol) when 
       is_integer(Ci), Ci>=0,
-      is_integer(Pwm), Pwm>0,
+      is_integer(Pwm), Pwm>=0,
       (Pol =:= normal orelse Pol =:= reversed) ->
     PwmDir = pwm_dir(Ci, Pwm),
     File = filename:join(PwmDir,"polarity"),
