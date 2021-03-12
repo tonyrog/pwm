@@ -11,6 +11,12 @@
 
 -define(PWM_DIR, "/sys/class/pwm").
 
+chip_dir(Ci) ->
+    filename:join(?PWM_DIR,"pwmchip"++integer_to_list(Ci)).
+
+pwm_dir(Ci,Pwm) ->
+    filename:join(chip_dir(Ci), "pwm"++integer_to_list(Pwm)).
+
 chip_list() ->
     case file:list_dir(?PWM_DIR) of
 	{error,enoent} ->
@@ -21,7 +27,7 @@ chip_list() ->
     end.
 
 number_of_pwms(Ci) ->
-    File = filename:join([?PWM_DIR,"pwmchip"++integer_to_list(Ci),"npwm"]),
+    File = filename:join(chip_dir(Ci),"npwm"),
     case file:read_file(File) of
 	{error,_} -> 0;
 	{ok,Data} ->
@@ -32,18 +38,14 @@ number_of_pwms(Ci) ->
 export(Ci, Pwm) when
       is_integer(Ci), Ci>=0,
       is_integer(Pwm), Pwm>=0 ->
-    File = filename:join([?PWM_DIR,"pwmchip"++integer_to_list(Ci),"export"]),
-    file:write_file(File, "1\n").
+    File = filename:join(chip_dir(Ci),"export"),
+    file:write_file(File, integer_to_list(Pwm)).
 
 unexport(Ci, Pwm) when 
       is_integer(Ci), Ci>=0,
       is_integer(Pwm), Pwm>=0 ->
-    File = filename:join([?PWM_DIR,"pwmchip"++integer_to_list(Ci),"unexport"]),
-    file:write_file(File, "1\n").
-
-pwm_dir(Ci,Pwm) ->
-    filename:join([?PWM_DIR,"pwmchip"++integer_to_list(Ci),
-		   "pwm"++integer_to_list(Pwm)]).
+    File = filename:join(chip_dir(Ci),"unexport"),
+    file:write_file(File, integer_to_list(Pwm)).
 
 set(Ci, Pwm, Value) when 
       is_integer(Ci), Ci>=0,
