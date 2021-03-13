@@ -7,7 +7,16 @@
 
 -module(pwm).
 
--compile(export_all).
+-export([chip_list/0]).
+-export([number_of_pwms/1]).
+-export([export/2, unexport/2]).
+-export([set_duty_cycle/3]).
+-export([set_period/3]).
+-export([set/3]).
+-export([enable/2, disable/2]).
+-export([polarity/3]).
+%% 
+-export([chip_dir/1, pwm_dir/2, pwm_item/3]).
 
 -define(PWM_DIR, "/sys/class/pwm").
 
@@ -16,6 +25,9 @@ chip_dir(Ci) ->
 
 pwm_dir(Ci,Pwm) ->
     filename:join(chip_dir(Ci), "pwm"++integer_to_list(Pwm)).
+
+pwm_item(Ci,Pwm,Item) ->
+    filename:join(pwm_dir(Ci,Pwm), Item).
 
 chip_list() ->
     case file:list_dir(?PWM_DIR) of
@@ -47,49 +59,42 @@ unexport(Ci, Pwm) when
     File = filename:join(chip_dir(Ci),"unexport"),
     file:write_file(File, integer_to_list(Pwm)).
 
-set(Ci, Pwm, Value) when 
-      is_integer(Ci), Ci>=0,
-      is_integer(Pwm), Pwm>=0,
-      is_number(Value), Value >= 0, Value =< 100 ->
-    PwmDir = pwm_dir(Ci, Pwm),
-    file:write(filename:join([PwmDir,"period"]), "10000000"),
-    file:write(filename:join([PwmDir,"duty_cycle"]), 
-	       integer_to_list(trunc((Value/100)*10000000))).
-
 set_duty_cycle(Ci, Pwm, Duty) when 
       is_integer(Ci), Ci>=0,
       is_integer(Pwm), Pwm>=0,
       is_integer(Duty), Duty>=0 ->
-    PwmDir = pwm_dir(Ci, Pwm),
-    File = filename:join(PwmDir,"duty_cycle"),
-    file:write(File, integer_to_list(Duty)).
+    file:write(pwm_item(Ci,Pwm,"duty_cycle"), integer_to_list(Duty)).
 
 set_period(Ci, Pwm, Period) when 
       is_integer(Ci), Ci>=0,
       is_integer(Pwm), Pwm>=0,
       is_integer(Period), Period>=0 ->
+    file:write(pwm_item(Ci,Pwm,"period"), integer_to_list(Period)).
+
+-define(DEFAULT_PERIOD, 1000000).  %% 1KHz period!
+
+set(Ci, Pwm, Value) when 
+      is_integer(Ci), Ci>=0,
+      is_integer(Pwm), Pwm>=0,
+      is_number(Value), Value >= 0, Value =< 100 ->
     PwmDir = pwm_dir(Ci, Pwm),
-    File = filename:join(PwmDir,"period"),
-    file:write(File, integer_to_list(Period)).
+    file:write(filename:join([PwmDir,"period"]),
+	       integer_to_list(?DEFAULT_PERIOD)),
+    file:write(filename:join([PwmDir,"duty_cycle"]), 
+	       integer_to_list(trunc((Value/100)*?DEFAULT_PERIOD))).
 
 enable(Ci, Pwm) when 
       is_integer(Ci), Ci>=0,
       is_integer(Pwm), Pwm>=0 ->
-    PwmDir = pwm_dir(Ci, Pwm),
-    File = filename:join(PwmDir,"enable"),
-    file:write(File, "1").
+    file:write(pwm_item(Ci,Pwm,"enable"), "1").
 
 disable(Ci, Pwm) when 
       is_integer(Ci), Ci>=0,
       is_integer(Pwm), Pwm>=0 ->
-    PwmDir = pwm_dir(Ci, Pwm),
-    File = filename:join(PwmDir,"enable"),
-    file:write(File, "0").
+    file:write(pwm_item(Ci,Pwm,"enable"), "0").
 
 polarity(Ci, Pwm, Pol) when 
       is_integer(Ci), Ci>=0,
       is_integer(Pwm), Pwm>=0,
       (Pol =:= normal orelse Pol =:= reversed) ->
-    PwmDir = pwm_dir(Ci, Pwm),
-    File = filename:join(PwmDir,"polarity"),
-    file:write(File, atom_to_list(Pol)).
+    file:write(pwm_item(Ci,Pwm,"polarity"), atom_to_list(Pol)).
